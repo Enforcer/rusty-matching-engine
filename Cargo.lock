@@ -10,7 +10,14 @@ name = "rusty_matching"
 version = "0.1.0"
 dependencies = [
  "intrusive-collections 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "text_io 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "text_io"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [metadata]
 "checksum intrusive-collections 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "5e3f2fab470fde1a4bcefdc72b8a8eaad0074233397d3d4abb078114606f1262"
+"checksum text_io 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)" = "9658b61ebd1d2a40c276ba2335890b9eb6550b67458a6fbce2022e58c3350a50"
