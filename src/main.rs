@@ -71,11 +71,12 @@ fn main() {
 
 	let bids = BinaryHeap::<Order>::new();
 
-	let (asks, bids, _trades) = execute_limit_order(asks, bids, Order{ side: Side::Bid, amount: 250, price: 2035, timestamp: 908 });
-	let (asks, bids, _trades) = execute_limit_order(asks, bids, Order{ side: Side::Ask, amount: 250, price: 2035, timestamp: 908 });
+	let (asks, bids, trades_1) = execute_limit_order(asks, bids, Order{ side: Side::Bid, amount: 250, price: 2035, timestamp: 908 });
+	let (asks, bids, trades_2) = execute_limit_order(asks, bids, Order{ side: Side::Ask, amount: 250, price: 2035, timestamp: 908 });
 
 	println!("Asks after: {:?}", asks.into_sorted_vec());
 	println!("Bids after: {:?}", bids.into_sorted_vec());
+	println!("Trades generated: {:?} and {:?}", trades_1, trades_2);
 }
 
 fn execute_limit_order(asks: BinaryHeap::<Order>, bids: BinaryHeap::<Order>, mut new_order: Order) -> (BinaryHeap::<Order>, BinaryHeap::<Order>, VecDeque::<Trade>) {
