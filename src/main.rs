@@ -2,96 +2,19 @@
 extern crate text_io;
 
 use std::cmp::min;
-use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::collections::VecDeque;
-use std::str::FromStr;
 
-#[derive(Copy, Clone, PartialEq, Debug)]
-enum Side {
-    Bid,
-    Ask,
-}
+mod orders;
 
-#[derive(Copy, Clone, Debug)]
-struct Trade {
-    executing_order_id: i32,
-    matched_order_id: i32,
-    timestamp: u128,
-    amount: i32,
-    price: i32,
-}
-
-#[derive(Copy, Clone, Debug)]
-struct Order {
-    side: Side,
-    amount: i32,
-    price: i32,
-    timestamp: i32,
-}
-
-impl Order {
-    fn matches(&self, other: &Self) -> bool {
-        return (self.side == Side::Bid && self.price >= other.price)
-            || (self.side == Side::Ask && self.price <= other.price);
-    }
-}
-
-impl Ord for Order {
-    fn cmp(&self, other: &Self) -> Ordering {
-        let multiplier;
-        if self.side == Side::Ask {
-            multiplier = -1;
-        } else {
-            multiplier = 1;
-        }
-        (self.price, self.timestamp).cmp(&((other.price * multiplier), other.timestamp))
-    }
-}
-
-impl PartialOrd for Order {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl PartialEq for Order {
-    fn eq(&self, other: &Self) -> bool {
-        self.price == other.price && self.timestamp == other.timestamp
-    }
-}
-
-impl Eq for Order {}
-
-impl FromStr for Order {
-    type Err = std::num::ParseIntError;
-
-    fn from_str(raw_str: &str) -> Result<Self, Self::Err> {
-        let (side_int, amount, price, timestamp): (i32, i32, i32, i32);
-        scan!(raw_str.bytes() => "{} {} {} {}", side_int, amount, price, timestamp);
-        let side;
-        if side_int == 4 {
-            side = Side::Ask;
-        } else if side_int == 8 {
-            side = Side::Bid;
-        } else {
-            panic!("Invalid side")
-        }
-        Ok(Self {
-            side: side,
-            amount: amount,
-            price: price,
-            timestamp: timestamp,
-        })
-    }
-}
+use orders::{order_from_str, Order, Side, Trade};
 
 fn main() {
     let mut asks = BinaryHeap::<Order>::new();
     let mut bids = BinaryHeap::<Order>::new();
     loop {
         let line: String = read!("{}\n");
-        match Order::from_str(&line) {
+        match order_from_str(&line) {
             Ok(new_order) => {
                 let trades = execute_limit_order(&mut asks, &mut bids, new_order);
                 println!("Trades generated: {:?}", trades);
@@ -150,6 +73,12 @@ fn execute_limit_order(
             price: price,
         });
     }
+    // move this part out of executing strategy function
+    // have different strategies for GTC, FOK or IOC
+    // GTC - pass trades through, add order (as below)
+    // FOK - if not filled, discard trades (how to undo changes in orders?)
+    // - "order validation" could do this before executing strategy.
+    // IoC - pass trades through, cancel order if amount > 0
     if new_order.amount > 0 {
         // IoC wouldn't add it
         println!("Pushing to same side {:?}", new_order);
@@ -248,31 +177,5 @@ mod tests {
         let only_trade = trades.front().unwrap();
         assert_eq!(only_trade.amount, amount);
         assert_eq!(only_trade.price, price);
-    }
-
-    #[test]
-    fn test_order_from_str_bid() {
-        assert_eq!(
-            Order::from_str("8 1 2 0"),
-            Ok(Order {
-                side: Side::Bid,
-                amount: 1,
-                price: 2,
-                timestamp: 0
-            })
-        );
-    }
-
-    #[test]
-    fn test_order_from_str_ask() {
-        assert_eq!(
-            Order::from_str("4 9 1 2"),
-            Ok(Order {
-                side: Side::Bid,
-                amount: 9,
-                price: 1,
-                timestamp: 2
-            })
-        );
     }
 }
