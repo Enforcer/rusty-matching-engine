@@ -96,24 +96,10 @@ mod tests {
 
     #[test]
     fn test_cross_order_bid() {
-        let mut asks = BinaryHeap::from(vec![Order {
-            side: Side::Ask,
-            amount: 10,
-            price: 10,
-            timestamp: 1,
-        }]);
+        let mut asks = BinaryHeap::from(vec![order_from_str("4 10 10 1 0").unwrap()]);
         let mut bids = BinaryHeap::<Order>::new();
 
-        let trades = execute_order(
-            &mut asks,
-            &mut bids,
-            Order {
-                side: Side::Bid,
-                amount: 10,
-                price: 10,
-                timestamp: 1,
-            },
-        );
+        let trades = execute_order(&mut asks, &mut bids, order_from_str("8 10 10 3 0").unwrap());
 
         assert_eq!(asks.into_sorted_vec(), []);
         assert_eq!(bids.into_sorted_vec(), []);
@@ -123,23 +109,9 @@ mod tests {
     #[test]
     fn test_cross_order_ask() {
         let mut asks = BinaryHeap::<Order>::new();
-        let mut bids = BinaryHeap::from(vec![Order {
-            side: Side::Bid,
-            amount: 10,
-            price: 10,
-            timestamp: 1,
-        }]);
+        let mut bids = BinaryHeap::from(vec![order_from_str("8 10 10 1 0").unwrap()]);
 
-        let trades = execute_order(
-            &mut asks,
-            &mut bids,
-            Order {
-                side: Side::Ask,
-                amount: 10,
-                price: 10,
-                timestamp: 1,
-            },
-        );
+        let trades = execute_order(&mut asks, &mut bids, order_from_str("4 10 10 5 0").unwrap());
 
         assert_eq!(asks.into_sorted_vec(), []);
         assert_eq!(bids.into_sorted_vec(), []);
@@ -149,27 +121,31 @@ mod tests {
     #[test]
     fn test_cheaper_ask_comes_in() {
         let mut asks = BinaryHeap::<Order>::new();
-        let mut bids = BinaryHeap::from(vec![Order {
-            side: Side::Bid,
-            amount: 10,
-            price: 10,
-            timestamp: 1,
-        }]);
+        let mut bids = BinaryHeap::from(vec![order_from_str("8 10 10 1 0").unwrap()]);
 
-        let trades = execute_order(
-            &mut asks,
-            &mut bids,
-            Order {
-                side: Side::Ask,
-                amount: 10,
-                price: 5,
-                timestamp: 1,
-            },
-        );
+        let trades = execute_order(&mut asks, &mut bids, order_from_str("4 10 5 3 0").unwrap());
 
         assert_eq!(asks.into_sorted_vec(), []);
         assert_eq!(bids.into_sorted_vec(), []);
         assert_has_one_trade(trades, 10, 10);
+    }
+
+    #[test]
+    fn test_market_order_buys_all() {
+        let mut asks = BinaryHeap::from(vec![
+            order_from_str("4 10 10 1 0").unwrap(),
+            order_from_str("4 10 20 1 0").unwrap(),
+        ]);
+        let mut bids = BinaryHeap::<Order>::new();
+
+        let trades = execute_order(&mut asks, &mut bids, order_from_str("8 20 0 3 1").unwrap());
+
+        assert_eq!(asks.into_sorted_vec(), []);
+        assert_eq!(bids.into_sorted_vec(), []);
+        assert_eq!(trades.get(0).unwrap().amount, 10);
+        assert_eq!(trades.get(0).unwrap().price, 10);
+        assert_eq!(trades.get(1).unwrap().amount, 10);
+        assert_eq!(trades.get(1).unwrap().price, 20);
     }
 
     fn assert_has_one_trade(trades: VecDeque<Trade>, amount: i32, price: i32) {
