@@ -16,7 +16,7 @@ fn main() {
         let line: String = read!("{}\n");
         match order_from_str(&line) {
             Ok(new_order) => {
-                let trades = execute_limit_order(&mut asks, &mut bids, new_order);
+                let trades = execute_order(&mut asks, &mut bids, new_order);
                 println!("Trades generated: {:?}", trades);
                 for order in asks.iter() {
                     println!("Ask: {:?}", order);
@@ -32,7 +32,7 @@ fn main() {
     }
 }
 
-fn execute_limit_order(
+fn execute_order(
     asks: &mut BinaryHeap<Order>,
     bids: &mut BinaryHeap<Order>,
     mut new_order: Order,
@@ -104,7 +104,7 @@ mod tests {
         }]);
         let mut bids = BinaryHeap::<Order>::new();
 
-        let trades = execute_limit_order(
+        let trades = execute_order(
             &mut asks,
             &mut bids,
             Order {
@@ -130,7 +130,7 @@ mod tests {
             timestamp: 1,
         }]);
 
-        let trades = execute_limit_order(
+        let trades = execute_order(
             &mut asks,
             &mut bids,
             Order {
@@ -156,7 +156,7 @@ mod tests {
             timestamp: 1,
         }]);
 
-        let trades = execute_limit_order(
+        let trades = execute_order(
             &mut asks,
             &mut bids,
             Order {

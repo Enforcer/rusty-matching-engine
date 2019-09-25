@@ -113,4 +113,11 @@ mod tests {
             })
         );
     }
+
+    #[test]
+    fn test_order_matches() {
+        let executing_order = order_from_str("8 1 1 5").unwrap();
+        let other_order = order_from_str("4 1 1 3").unwrap();
+        assert!(executing_order.matches(&other_order));
+    }
 }
